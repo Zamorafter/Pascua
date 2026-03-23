@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Busqueda de Huevos de Pascua</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-shell"></div>
+
+    <div class="container">
+        <div id="egg-celebration" class="egg-celebration hidden" aria-hidden="true">
+            <div class="egg-burst egg-burst-left"></div>
+            <div class="egg-burst egg-burst-right"></div>
+            <div class="egg-core">
+                <div class="egg-shine"></div>
+                <div class="egg-shell egg-shell-top"></div>
+                <div class="egg-shell egg-shell-bottom"></div>
+                <div class="egg-stars">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <p id="celebration-text">Huevo encontrado</p>
+        </div>
+
+        <div id="auth-section" class="panel auth-panel">
+            <div class="hero-badge">Edicion QR</div>
+            <h2>Inicia tu busqueda</h2>
+            <p class="auth-copy">Entra, registra tu cuenta y encuentra los 10 huevos antes que los demas.</p>
+
+            <form id="auth-form">
+                <div class="input-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" placeholder="correo@ejemplo.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="password">Contrasena</label>
+                    <input type="password" id="password" placeholder="Tu contrasena" required>
+                </div>
+
+                <div class="auth-actions">
+                    <button type="submit" id="login-btn" class="primary-btn">Iniciar sesion</button>
+                    <button type="button" id="register-btn" class="secondary-btn">Registrarse</button>
+                </div>
+            </form>
+
+            <div id="auth-error" class="error"></div>
+        </div>
+
+        <div id="main-content" class="panel main-panel" style="display: none;">
+            <div class="title-row">
+                <div>
+                    <p class="eyebrow">Mision activa</p>
+                    <h1>Busqueda de Huevos de Pascua</h1>
+                </div>
+                <button id="logout-btn">Cerrar sesion</button>
+            </div>
+
+            <div id="progress" class="progress-card">
+                <h3>Tu progreso</h3>
+                <p>Huevos encontrados: <span id="count">0</span> / <span id="total">10</span></p>
+                <div id="eggs-list"></div>
+            </div>
+
+            <div id="video-container" class="scanner-card">
+                <div class="scanner-frame">
+                    <div id="qr-reader"></div>
+                    <div class="scanner-overlay">
+                        <span class="scanner-line"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="result-area" class="result-card">
+                <p id="message">Escanea un codigo QR para comenzar</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

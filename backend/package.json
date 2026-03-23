@@ -1,0 +1,20 @@
+{
+  "name": "proyecto-huevos-pascua-backend",
+  "version": "1.0.0",
+  "description": "Backend para la busqueda de huevos de pascua con Express, PostgreSQL y Socket.IO.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "test": "node tests/smoke.test.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.3",
+    "socket.io": "^4.8.1"
+  }
+}
