@@ -49,25 +49,42 @@ La prueba valida que los modulos principales carguen y exporten lo esperado.
 
 El frontend es estatico. Puedes abrir [frontend/index.html](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/frontend/index.html) con Live Server o cualquier hosting estatico.
 
-Durante desarrollo local, [frontend/script.js](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/frontend/script.js) apunta automaticamente a `http://localhost:3001`.
+Durante desarrollo local, [frontend/config.js](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/frontend/config.js) apunta a `http://localhost:3001`.
 
 ## Despliegue en Railway
 
 1. Sube la carpeta `backend`.
 2. Railway detectara Node.js usando [backend/package.json](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/package.json).
 3. Define estas variables de entorno:
-   - `DATABASE_URL`
+   - `DATABASE_URL=${{ Postgres.DATABASE_URL }}`
    - `JWT_SECRET`
    - `PORT`
 4. Ejecuta [backend/schema.sql](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/schema.sql) sobre tu base PostgreSQL.
 5. Usa `npm start` como comando de arranque si Railway no lo detecta solo.
+6. Copia la URL publica del backend, por ejemplo `https://tu-backend-production.up.railway.app`.
 
 ## Despliegue en Netlify
 
-1. Publica la carpeta `frontend`.
-2. En [frontend/script.js](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/frontend/script.js), cambia `https://tu-backend.railway.app` por tu URL real de Railway.
-3. Vuelve a desplegar Netlify despues de ese cambio.
-4. El backend ya acepta dominios `*.netlify.app` desde CORS.
+1. Conecta este repositorio a Netlify.
+2. Deja estos valores:
+   - Base directory: vacio
+   - Build command: `node scripts/generate-config.js`
+   - Publish directory: `frontend`
+3. En variables de entorno de Netlify agrega:
+   - `API_BASE_URL=https://tu-backend-production.up.railway.app`
+4. Lanza el deploy.
+5. Netlify generara automaticamente [frontend/config.js](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/frontend/config.js) con la URL correcta del backend.
+6. El backend ya acepta dominios `*.netlify.app` desde CORS.
+
+## Flujo final recomendado
+
+1. Crea PostgreSQL en Railway.
+2. En el servicio backend de Railway define `DATABASE_URL=${{ Postgres.DATABASE_URL }}`, `JWT_SECRET` y `PORT`.
+3. Sube el backend a Railway y ejecuta [backend/schema.sql](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/schema.sql).
+4. Copia la URL publica de Railway.
+5. Conecta este repositorio a Netlify.
+6. En Netlify define `API_BASE_URL` con la URL de Railway.
+7. Despliega y prueba registro, login y escaneo desde el sitio publicado.
 
 ## Notas
 

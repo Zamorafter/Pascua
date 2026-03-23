@@ -1,6 +1,4 @@
-const API_BASE_URL = window.location.hostname.includes('netlify.app')
-    ? 'https://tu-backend.railway.app'
-    : 'http://localhost:3001';
+const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:3001';
 
 let token = null;
 let userId = null;
