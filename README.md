@@ -6,7 +6,7 @@ Aplicacion web para una busqueda de huevos de pascua con registro de usuarios, e
 
 - `backend/`: API con Express, PostgreSQL, JWT y Socket.IO.
 - `frontend/`: sitio estatico listo para publicar en Netlify.
-- `backend/schema.sql`: crea las tablas e inserta los 10 huevos base.
+- `backend/schema.sql`: crea las tablas del juego y carga 80 QR (20 premios reales y 60 falsos).
 
 ## Backend local
 
@@ -20,10 +20,11 @@ npm.cmd install
 
 3. Configura [backend/.env](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/.env) con tus valores reales.
    Puedes copiar [backend/.env.example](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/.env.example) como base.
-4. Crea la base de datos `easter_egg` en PostgreSQL y ejecuta el esquema:
+4. Crea la base de datos `easter_egg` en PostgreSQL y ejecuta la migracion:
 
 ```powershell
-psql -U postgres -d easter_egg -f schema.sql
+cd backend
+npm.cmd run migrate
 ```
 
 5. Inicia el backend:
@@ -59,9 +60,15 @@ Durante desarrollo local, [frontend/config.js](C:/Users/rquevedo/Music/huevo%20d
    - `DATABASE_URL=${{ Postgres.DATABASE_URL }}`
    - `JWT_SECRET`
    - `PORT`
-4. Ejecuta [backend/schema.sql](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/schema.sql) sobre tu base PostgreSQL.
+4. Ejecuta la migracion del backend:
+
+```bash
+npm run migrate
+```
+
 5. Usa `npm start` como comando de arranque si Railway no lo detecta solo.
 6. Copia la URL publica del backend, por ejemplo `https://tu-backend-production.up.railway.app`.
+7. Verifica que Railway responda abriendo `https://tu-backend-production.up.railway.app/api/health`.
 
 ## Despliegue en Netlify
 
@@ -80,7 +87,7 @@ Durante desarrollo local, [frontend/config.js](C:/Users/rquevedo/Music/huevo%20d
 
 1. Crea PostgreSQL en Railway.
 2. En el servicio backend de Railway define `DATABASE_URL=${{ Postgres.DATABASE_URL }}`, `JWT_SECRET` y `PORT`.
-3. Sube el backend a Railway y ejecuta [backend/schema.sql](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/schema.sql).
+3. Sube el backend a Railway y ejecuta `npm run migrate`.
 4. Copia la URL publica de Railway.
 5. Conecta este repositorio a Netlify.
 6. En Netlify define `API_BASE_URL` con la URL de Railway.

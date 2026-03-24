@@ -23,13 +23,21 @@
                     <span></span>
                 </div>
             </div>
-            <p id="celebration-text">Huevo encontrado</p>
+            <p id="celebration-text">Haz encontrado el premio</p>
+        </div>
+
+        <div id="sad-feedback" class="sad-feedback hidden" aria-hidden="true">
+            <div class="sad-card">
+                <div class="sad-glow"></div>
+                <p class="sad-label">Intento fallido</p>
+                <h3 id="sad-text">No lo haz encontrado, sigue buscando</h3>
+            </div>
         </div>
 
         <div id="auth-section" class="panel auth-panel">
             <div class="hero-badge">Edicion QR</div>
             <h2>Inicia tu busqueda</h2>
-            <p class="auth-copy">Entra, registra tu cuenta y encuentra los 10 huevos antes que los demas.</p>
+            <p class="auth-copy">Entra, registra tu cuenta y encuentra los 20 premios reales escondidos entre 80 codigos QR.</p>
 
             <form id="auth-form">
                 <div class="input-group">
@@ -62,7 +70,7 @@
 
             <div id="progress" class="progress-card">
                 <h3>Tu progreso</h3>
-                <p>Huevos encontrados: <span id="count">0</span> / <span id="total">10</span></p>
+                <p>Premios encontrados: <span id="count">0</span> / <span id="total">20</span></p>
                 <div id="eggs-list"></div>
             </div>
 

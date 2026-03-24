@@ -6,12 +6,21 @@ CREATE TABLE IF NOT EXISTS users (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
--- Tabla de huevos
+-- Tabla de huevos / QR
 CREATE TABLE IF NOT EXISTS eggs (
     id SERIAL PRIMARY KEY,
     egg_number INT NOT NULL UNIQUE,
-    qr_code_data VARCHAR(50) NOT NULL UNIQUE
+    qr_code_data VARCHAR(50) NOT NULL UNIQUE,
+    is_winning BOOLEAN NOT NULL DEFAULT FALSE,
+    winning_number INT,
+    claimed_by_user_id INT REFERENCES users(id) ON DELETE SET NULL,
+    claimed_at TIMESTAMP
 );
+
+ALTER TABLE eggs ADD COLUMN IF NOT EXISTS is_winning BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE eggs ADD COLUMN IF NOT EXISTS winning_number INT;
+ALTER TABLE eggs ADD COLUMN IF NOT EXISTS claimed_by_user_id INT REFERENCES users(id) ON DELETE SET NULL;
+ALTER TABLE eggs ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMP;
 
 -- Tabla de escaneos
 CREATE TABLE IF NOT EXISTS scans (
@@ -22,14 +31,15 @@ CREATE TABLE IF NOT EXISTS scans (
     UNIQUE(user_id, egg_id)
 );
 
--- Insertar los 10 huevos
-DO $$
-DECLARE
-    i INT;
-BEGIN
-    FOR i IN 1..10 LOOP
-        INSERT INTO eggs (egg_number, qr_code_data)
-        VALUES (i, 'egg_' || i)
-        ON CONFLICT (egg_number) DO NOTHING;
-    END LOOP;
-END $$;
+-- Reiniciar el tablero con 80 QR:
+-- 20 premios reales y 60 QR sin premio.
+TRUNCATE TABLE scans RESTART IDENTITY;
+TRUNCATE TABLE eggs RESTART IDENTITY;
+
+INSERT INTO eggs (egg_number, qr_code_data, is_winning, winning_number)
+SELECT
+    i,
+    'egg_' || i,
+    i <= 20,
+    CASE WHEN i <= 20 THEN i ELSE NULL END
+FROM generate_series(1, 80) AS i;

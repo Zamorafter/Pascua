@@ -6,6 +6,7 @@ let html5QrCode = null;
 let socket = null;
 let currentScannerActive = false;
 let celebrationTimeout = null;
+let sadTimeout = null;
 
 const authSection = document.getElementById('auth-section');
 const mainContent = document.getElementById('main-content');
@@ -21,6 +22,54 @@ const eggsListDiv = document.getElementById('eggs-list');
 const messageDiv = document.getElementById('message');
 const celebration = document.getElementById('egg-celebration');
 const celebrationText = document.getElementById('celebration-text');
+const sadFeedback = document.getElementById('sad-feedback');
+const sadText = document.getElementById('sad-text');
+
+function isLocalHost(hostname) {
+    return hostname === 'localhost' || hostname === '127.0.0.1';
+}
+
+function validateApiConfiguration() {
+    const currentHost = window.location.hostname;
+    const usingLocalApi = API_BASE_URL.includes('localhost') || API_BASE_URL.includes('127.0.0.1');
+
+    if (!isLocalHost(currentHost) && usingLocalApi) {
+        authError.textContent = 'Tu frontend esta publicado, pero API_BASE_URL sigue apuntando a localhost. Configura la URL publica de Railway en Netlify.';
+        return false;
+    }
+
+    return true;
+}
+
+function hideEggCelebration() {
+    celebration.classList.add('hidden');
+}
+
+function hideSadFeedback() {
+    sadFeedback.classList.add('hidden');
+}
+
+function showEggCelebration(text) {
+    hideSadFeedback();
+    celebrationText.textContent = text || 'Haz encontrado el premio';
+    celebration.classList.remove('hidden');
+
+    clearTimeout(celebrationTimeout);
+    celebrationTimeout = setTimeout(() => {
+        hideEggCelebration();
+    }, 1900);
+}
+
+function showSadFeedback(text) {
+    hideEggCelebration();
+    sadText.textContent = text || 'No lo haz encontrado, sigue buscando';
+    sadFeedback.classList.remove('hidden');
+
+    clearTimeout(sadTimeout);
+    sadTimeout = setTimeout(() => {
+        hideSadFeedback();
+    }, 1800);
+}
 
 function setAuthenticated(isAuth) {
     if (isAuth) {
@@ -35,6 +84,7 @@ function setAuthenticated(isAuth) {
     authSection.style.display = 'block';
     mainContent.style.display = 'none';
     hideEggCelebration();
+    hideSadFeedback();
 
     if (html5QrCode) {
         html5QrCode.stop().catch(() => {});
@@ -51,18 +101,9 @@ function setAuthenticated(isAuth) {
     localStorage.removeItem('userId');
 }
 
-function showEggCelebration(text) {
-    celebrationText.textContent = text || 'Huevo encontrado';
-    celebration.classList.remove('hidden');
-
-    clearTimeout(celebrationTimeout);
-    celebrationTimeout = setTimeout(() => {
-        hideEggCelebration();
-    }, 1800);
-}
-
-function hideEggCelebration() {
-    celebration.classList.add('hidden');
+function showResultMessage(text, variant) {
+    messageDiv.textContent = text;
+    messageDiv.className = variant;
 }
 
 async function authenticate(endpoint) {
@@ -71,6 +112,10 @@ async function authenticate(endpoint) {
 
     if (!email || !password) {
         authError.textContent = 'Completa todos los campos';
+        return;
+    }
+
+    if (!validateApiConfiguration()) {
         return;
     }
 
@@ -138,11 +183,49 @@ async function loadProgress() {
             const found = data.eggs.includes(i);
             const badge = document.createElement('span');
             badge.className = `egg-badge ${found ? 'found' : ''}`;
-            badge.textContent = `Huevo ${i}`;
+            badge.textContent = `Premio ${i}`;
             eggsListDiv.appendChild(badge);
         }
     } catch (error) {
         console.error(error);
+    }
+}
+
+async function handleScanResult(decodedText) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/scan`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: `Bearer ${token}`
+            },
+            body: JSON.stringify({ qrData: decodedText })
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.resultType === 'winning') {
+            showResultMessage(data.message, 'success');
+            showEggCelebration('Haz encontrado el premio');
+            loadProgress();
+            return;
+        }
+
+        if (response.ok && data.resultType === 'fake') {
+            showResultMessage(data.message, 'error');
+            showSadFeedback('No lo haz encontrado, sigue buscando');
+            return;
+        }
+
+        if (data.resultType === 'claimed' || data.resultType === 'already_scanned' || data.resultType === 'fake_repeat') {
+            showResultMessage(data.error, 'error');
+            return;
+        }
+
+        showResultMessage(data.error || 'Ocurrio un error al escanear', 'error');
+    } catch (error) {
+        console.error(error);
+        showResultMessage('Error de conexion con el servidor', 'error');
     }
 }
 
@@ -163,32 +246,7 @@ function startScanner() {
         await html5QrCode.stop();
         currentScannerActive = false;
 
-        try {
-            const response = await fetch(`${API_BASE_URL}/api/scan`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`
-                },
-                body: JSON.stringify({ qrData: decodedText })
-            });
-
-            const data = await response.json();
-
-            if (response.ok) {
-                messageDiv.textContent = data.message;
-                messageDiv.className = 'success';
-                showEggCelebration(`Huevo ${data.eggNumber} encontrado`);
-                loadProgress();
-            } else {
-                messageDiv.textContent = `Aviso: ${data.error}`;
-                messageDiv.className = 'error';
-            }
-        } catch (error) {
-            console.error(error);
-            messageDiv.textContent = 'Error de conexion con el servidor';
-            messageDiv.className = 'error';
-        }
+        await handleScanResult(decodedText);
 
         setTimeout(() => {
             if (!token) {
@@ -213,8 +271,7 @@ function startScanner() {
         })
         .catch((error) => {
             console.error('Error al iniciar la camara:', error);
-            messageDiv.textContent = 'No se pudo acceder a la camara. Asegurate de dar permisos.';
-            messageDiv.className = 'error';
+            showResultMessage('No se pudo acceder a la camara. Asegurate de dar permisos.', 'error');
         });
 }
 
@@ -246,7 +303,7 @@ function connectWebSocket() {
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 4000);
 
-        if (String(data.userId) === String(userId)) {
+        if (String(data.userId) === String(userId) && data.resultType === 'winning') {
             showEggCelebration(`Huevo ${data.eggNumber} encontrado`);
             loadProgress();
         }
@@ -259,6 +316,8 @@ function connectWebSocket() {
 
 const savedToken = localStorage.getItem('token');
 const savedUserId = localStorage.getItem('userId');
+
+validateApiConfiguration();
 
 if (savedToken && savedUserId) {
     token = savedToken;
