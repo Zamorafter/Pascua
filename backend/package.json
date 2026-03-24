@@ -7,7 +7,8 @@
     "start": "node index.js",
     "dev": "node --watch index.js",
     "test": "node tests/smoke.test.js",
-    "migrate": "node scripts/migrate.js"
+    "migrate": "node scripts/migrate.js",
+    "reset-game": "node scripts/reset-game.js"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

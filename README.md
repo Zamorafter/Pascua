@@ -6,7 +6,7 @@ Aplicacion web para una busqueda de huevos de pascua con registro de usuarios, e
 
 - `backend/`: API con Express, PostgreSQL, JWT y Socket.IO.
 - `frontend/`: sitio estatico listo para publicar en Netlify.
-- `backend/schema.sql`: crea las tablas del juego y carga 80 QR (20 premios reales y 60 falsos).
+- `backend/schema.sql`: crea las tablas del juego y carga 80 QR (20 premios reales y 60 falsos) sin borrar progreso.
 
 ## Backend local
 
@@ -96,5 +96,8 @@ npm run migrate
 ## Notas
 
 - El login tiene una interfaz interactiva en azul, negro y amarillo.
-- Al escanear correctamente un QR se muestra una animacion de huevo.
+- Al escanear correctamente un QR premio se muestra una animacion de huevo.
+- Los QR falsos muestran una transicion triste, sin reiniciar el juego.
+- `npm run migrate` no borra progreso.
+- Si alguna vez quieres reiniciar el juego manualmente, usa `npm run reset-game`.
 - Si vas a usar tu propio dominio en Netlify, agregalo tambien al arreglo `allowedOrigins` en [backend/index.js](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/index.js).

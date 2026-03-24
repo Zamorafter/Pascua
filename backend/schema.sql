@@ -31,15 +31,17 @@ CREATE TABLE IF NOT EXISTS scans (
     UNIQUE(user_id, egg_id)
 );
 
--- Reiniciar el tablero con 80 QR:
+-- Cargar 80 QR sin borrar progreso.
 -- 20 premios reales y 60 QR sin premio.
-TRUNCATE TABLE scans RESTART IDENTITY;
-TRUNCATE TABLE eggs RESTART IDENTITY;
-
 INSERT INTO eggs (egg_number, qr_code_data, is_winning, winning_number)
 SELECT
     i,
     'egg_' || i,
     i <= 20,
     CASE WHEN i <= 20 THEN i ELSE NULL END
-FROM generate_series(1, 80) AS i;
+FROM generate_series(1, 80) AS i
+ON CONFLICT (egg_number) DO UPDATE
+SET
+    qr_code_data = EXCLUDED.qr_code_data,
+    is_winning = EXCLUDED.is_winning,
+    winning_number = EXCLUDED.winning_number;
