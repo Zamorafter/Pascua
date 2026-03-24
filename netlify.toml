@@ -4,3 +4,4 @@
 
 [build.environment]
   NODE_VERSION = "20"
+  API_BASE_URL = "https://pascua-production.up.railway.app"
