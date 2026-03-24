@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const http = require('http');
 const dotenv = require('dotenv');
+const pool = require('./db');
 const authRoutes = require('./routes/auth');
 const scanRoutes = require('./routes/scan');
 const userRoutes = require('./routes/user');
@@ -12,6 +13,19 @@ dotenv.config();
 const app = express();
 const server = http.createServer(app);
 const io = socketSetup.init(server);
+
+async function verifyStartup() {
+    console.log(`Iniciando backend. PORT=${process.env.PORT || 3001}`);
+    console.log(`DATABASE_URL configurada: ${Boolean(process.env.DATABASE_URL)}`);
+
+    try {
+        await pool.query('SELECT 1');
+        console.log('Conexion a PostgreSQL verificada correctamente');
+    } catch (error) {
+        console.error('Error verificando la conexion a PostgreSQL:', error);
+        process.exit(1);
+    }
+}
 
 // Configuracion de CORS (ajusta el origen segun tu frontend)
 const allowedOrigins = [
@@ -40,11 +54,18 @@ app.use((req, res, next) => {
 });
 
 // Rutas
+app.get('/api/health', (req, res) => {
+    res.json({ ok: true, service: 'backend', timestamp: new Date().toISOString() });
+});
+
 app.use('/api/auth', authRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/user', userRoutes);
 
 const PORT = process.env.PORT || 3001;
-server.listen(PORT, () => {
-    console.log(`Servidor corriendo en puerto ${PORT}`);
+
+verifyStartup().then(() => {
+    server.listen(PORT, () => {
+        console.log(`Servidor corriendo en puerto ${PORT}`);
+    });
 });
