@@ -57,7 +57,7 @@ function showEggCelebration(text) {
     clearTimeout(celebrationTimeout);
     celebrationTimeout = setTimeout(() => {
         hideEggCelebration();
-    }, 1900);
+    }, 5000);
 }
 
 function showSadFeedback(text) {
@@ -183,7 +183,7 @@ async function loadProgress() {
             const found = data.eggs.includes(i);
             const badge = document.createElement('span');
             badge.className = `egg-badge ${found ? 'found' : ''}`;
-            badge.textContent = `Premio ${i}`;
+            badge.textContent = found ? `Premio ${i} encontrado` : `Premio ${i}`;
             eggsListDiv.appendChild(badge);
         }
     } catch (error) {
@@ -217,7 +217,13 @@ async function handleScanResult(decodedText) {
             return;
         }
 
-        if (data.resultType === 'claimed' || data.resultType === 'already_scanned' || data.resultType === 'fake_repeat') {
+        if (
+            data.resultType === 'claimed' ||
+            data.resultType === 'already_scanned' ||
+            data.resultType === 'fake_repeat' ||
+            data.resultType === 'user_limit' ||
+            data.resultType === 'user_attempt_used'
+        ) {
             showResultMessage(data.error, 'error');
             return;
         }
@@ -303,8 +309,7 @@ function connectWebSocket() {
         document.body.appendChild(notif);
         setTimeout(() => notif.remove(), 4000);
 
-        if (String(data.userId) === String(userId) && data.resultType === 'winning') {
-            showEggCelebration(`Huevo ${data.eggNumber} encontrado`);
+        if (data.resultType === 'winning') {
             loadProgress();
         }
     });

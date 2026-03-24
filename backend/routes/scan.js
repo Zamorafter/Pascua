@@ -32,10 +32,24 @@ router.post('/', authMiddleware, async (req, res) => {
 
         const egg = eggRes.rows[0];
 
-        const previousScan = await client.query(
-            'SELECT id FROM scans WHERE user_id = $1 AND egg_id = $2',
-            [userId, egg.id]
+        const userAnyScan = await client.query(
+            `SELECT s.id, e.is_winning, e.winning_number, e.egg_number
+             FROM scans s
+             JOIN eggs e ON e.id = s.egg_id
+             WHERE s.user_id = $1
+             LIMIT 1`,
+            [userId]
         );
+
+        if (userAnyScan.rows.length > 0) {
+            const previous = userAnyScan.rows[0];
+            await client.query('ROLLBACK');
+            return res.status(409).json({
+                resultType: 'user_attempt_used',
+                eggNumber: previous.winning_number || previous.egg_number,
+                error: 'Este correo ya uso su unico intento'
+            });
+        }
 
         if (egg.is_winning) {
             if (egg.claimed_by_user_id && Number(egg.claimed_by_user_id) !== Number(userId)) {
@@ -44,15 +58,6 @@ router.post('/', authMiddleware, async (req, res) => {
                     resultType: 'claimed',
                     eggNumber: egg.winning_number,
                     error: `El huevo N°${egg.winning_number} ya se ha encontrado`
-                });
-            }
-
-            if (previousScan.rows.length > 0) {
-                await client.query('ROLLBACK');
-                return res.status(409).json({
-                    resultType: 'already_scanned',
-                    eggNumber: egg.winning_number,
-                    error: `Ya reclamaste el huevo N°${egg.winning_number}`
                 });
             }
 
@@ -84,14 +89,6 @@ router.post('/', authMiddleware, async (req, res) => {
                 resultType: 'winning',
                 eggNumber: egg.winning_number,
                 message: `Haz encontrado el premio del huevo N°${egg.winning_number}`
-            });
-        }
-
-        if (previousScan.rows.length > 0) {
-            await client.query('ROLLBACK');
-            return res.status(409).json({
-                resultType: 'fake_repeat',
-                error: 'No lo haz encontrado, sigue buscando'
             });
         }
 
