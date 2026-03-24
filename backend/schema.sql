@@ -33,8 +33,8 @@ CREATE TABLE IF NOT EXISTS scans (
 
 -- Reiniciar el tablero con 80 QR:
 -- 20 premios reales y 60 QR sin premio.
-TRUNCATE TABLE scans RESTART IDENTITY;
-TRUNCATE TABLE eggs RESTART IDENTITY;
+TRUNCATE TABLE scans RESTART IDENTITY CASCADE;
+TRUNCATE TABLE eggs RESTART IDENTITY CASCADE;
 
 INSERT INTO eggs (egg_number, qr_code_data, is_winning, winning_number)
 SELECT
