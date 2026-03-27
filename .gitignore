@@ -3,3 +3,4 @@ backend/.env
 backend/server.out
 backend/server.err
 tools/
+qr-imprimir/

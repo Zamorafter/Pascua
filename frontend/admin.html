@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Panel de Administración - Huevos de Pascua</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        .admin-panel {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 20px;
+            text-align: left;
+        }
+
+        .stat-value {
+            font-size: 2.4rem;
+            font-weight: 800;
+            color: var(--yellow);
+            margin: 8px 0 4px;
+        }
+
+        .stat-label {
+            color: var(--text-soft);
+            font-size: 0.92rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .scans-table {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 20px;
+            margin-top: 18px;
+            overflow-x: auto;
+        }
+
+        .scans-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .scans-table th {
+            text-align: left;
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--yellow-soft);
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.08em;
+        }
+
+        .scans-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--text-main);
+        }
+
+        .scans-table tr:hover {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .winning-badge {
+            background: linear-gradient(135deg, rgba(255, 214, 10, 0.18), rgba(29, 125, 242, 0.32));
+            color: var(--text-main);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 214, 10, 0.32);
+        }
+
+        .fake-badge {
+            background: rgba(255, 255, 255, 0.06);
+            color: var(--text-soft);
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .notification-badge {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            border-radius: 16px;
+            padding: 16px 20px;
+            max-width: 320px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(14px);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+
+        .notification-badge.show {
+            transform: translateX(0);
+        }
+
+        .notification-title {
+            color: var(--yellow);
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            color: var(--text-main);
+            font-size: 0.95rem;
+        }
+
+        .refresh-btn {
+            background: linear-gradient(135deg, var(--blue), var(--blue-strong));
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 10px 16px;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .refresh-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .header-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .scans-table {
+                font-size: 0.85rem;
+            }
+            
+            .scans-table th,
+            .scans-table td {
+                padding: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="page-shell"></div>
+
+    <div class="container admin-panel">
+        <div id="auth-section" class="panel auth-panel">
+            <div class="hero-badge">Panel Administrador</div>
+            <h2>Acceso Administrativo</h2>
+            <p class="auth-copy">Ingresa tus credenciales para monitorear la actividad de escaneo de huevos en tiempo real.</p>
+
+            <form id="admin-auth-form">
+                <div class="input-group">
+                    <label for="admin-email">Email Administrador</label>
+                    <input type="email" id="admin-email" placeholder="admin@ejemplo.com" required>
+                </div>
+
+                <div class="input-group">
+                    <label for="admin-password">Contraseña</label>
+                    <input type="password" id="admin-password" placeholder="Tu contraseña" required>
+                </div>
+
+                <div class="auth-actions">
+                    <button type="submit" class="primary-btn">Iniciar Sesión</button>
+                </div>
+            </form>
+
+            <div id="admin-auth-error" class="error"></div>
+        </div>
+
+        <div id="admin-content" class="panel main-panel" style="display: none;">
+            <div class="title-row">
+                <div>
+                    <p class="eyebrow">Panel de Control</p>
+                    <h1>Administración de Huevos</h1>
+                </div>
+                <button id="admin-logout-btn">Cerrar Sesión</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Total Escaneos</div>
+                    <div class="stat-value" id="total-scans">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Premios Encontrados</div>
+                    <div class="stat-value" id="winning-scans">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Huevos Reclamados</div>
+                    <div class="stat-value" id="claimed-eggs">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Actividad 24h</div>
+                    <div class="stat-value" id="recent-scans">0</div>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <h3>Registro de Escaneos en Tiempo Real</h3>
+                <button id="refresh-btn" class="refresh-btn">Actualizar</button>
+            </div>
+
+            <div class="scans-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha/Hora</th>
+                            <th>Usuario</th>
+                            <th>Huevo</th>
+                            <th>Código QR</th>
+                            <th>Tipo</th>
+                            <th>Premio</th>
+                        </tr>
+                    </thead>
+                    <tbody id="scans-tbody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; color: var(--text-soft);">Cargando datos...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="notification" class="notification-badge">
+        <div class="notification-title">Nuevo Escaneo</div>
+        <div class="notification-message" id="notification-message">Alguien escaneó un huevo</div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <script>
+        const API_BASE = window.config?.API_BASE || 'http://localhost:3001';
+        let adminToken = localStorage.getItem('adminToken');
+        let socket = null;
+
+        // DOM elements
+        const authSection = document.getElementById('auth-section');
+        const adminContent = document.getElementById('admin-content');
+        const adminAuthForm = document.getElementById('admin-auth-form');
+        const adminAuthError = document.getElementById('admin-auth-error');
+        const adminLogoutBtn = document.getElementById('admin-logout-btn');
+        const refreshBtn = document.getElementById('refresh-btn');
+        const notification = document.getElementById('notification');
+        const notificationMessage = document.getElementById('notification-message');
+
+        // Check if already logged in
+        if (adminToken) {
+            showAdminPanel();
+        }
+
+        // Admin login
+        adminAuthForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    adminToken = data.token;
+                    localStorage.setItem('adminToken', adminToken);
+                    showAdminPanel();
+                } else {
+                    adminAuthError.textContent = data.error || 'Error de autenticación';
+                }
+            } catch (error) {
+                adminAuthError.textContent = 'Error de conexión';
+            }
+        });
+
+        // Admin logout
+        adminLogoutBtn.addEventListener('click', () => {
+            localStorage.removeItem('adminToken');
+            adminToken = null;
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+            authSection.style.display = 'block';
+            adminContent.style.display = 'none';
+        });
+
+        // Show admin panel
+        function showAdminPanel() {
+            authSection.style.display = 'none';
+            adminContent.style.display = 'block';
+            loadStats();
+            loadScans();
+            connectSocket();
+        }
+
+        // Load statistics
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/stats`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const stats = await response.json();
+                    document.getElementById('total-scans').textContent = stats.totalScans;
+                    document.getElementById('winning-scans').textContent = stats.winningScans;
+                    document.getElementById('claimed-eggs').textContent = stats.claimedEggs;
+                    document.getElementById('recent-scans').textContent = stats.recentScans24h;
+                }
+            } catch (error) {
+                console.error('Error loading stats:', error);
+            }
+        }
+
+        // Load scans
+        async function loadScans() {
+            try {
+                const response = await fetch(`${API_BASE}/api/admin/scans`, {
+                    headers: {
+                        'Authorization': `Bearer ${adminToken}`
+                    }
+                });
+
+                if (response.ok) {
+                    const scans = await response.json();
+                    displayScans(scans);
+                }
+            } catch (error) {
+                console.error('Error loading scans:', error);
+            }
+        }
+
+        // Display scans in table
+        function displayScans(scans) {
+            const tbody = document.getElementById('scans-tbody');
+            
+            if (scans.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: var(--text-soft);">No hay escaneos registrados</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = scans.map(scan => {
+                const date = new Date(scan.scanned_at);
+                const formattedDate = date.toLocaleString('es-ES', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const badge = scan.is_winning 
+                    ? `<span class="winning-badge">Premio #${scan.winning_number}</span>`
+                    : '<span class="fake-badge">Falso</span>';
+
+                return `
+                    <tr>
+                        <td>${formattedDate}</td>
+                        <td>${scan.user_email}</td>
+                        <td>#${scan.egg_number}</td>
+                        <td><code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px;">${scan.qr_code_data}</code></td>
+                        <td>${badge}</td>
+                        <td>${scan.claimed_by_user_id ? '✅ Sí' : '❌ No'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        // Connect to socket for real-time updates
+        function connectSocket() {
+            socket = io(API_BASE);
+            
+            socket.on('new_scan', (data) => {
+                // Show notification
+                showNotification(data.message);
+                
+                // Refresh data
+                loadStats();
+                loadScans();
+            });
+        }
+
+        // Show notification
+        function showNotification(message) {
+            notificationMessage.textContent = message;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+
+        // Refresh button
+        refreshBtn.addEventListener('click', () => {
+            loadStats();
+            loadScans();
+        });
+    </script>
+</body>
+</html>

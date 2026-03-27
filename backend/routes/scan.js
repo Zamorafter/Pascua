@@ -17,6 +17,14 @@ router.post('/', authMiddleware, async (req, res) => {
     try {
         await client.query('BEGIN');
 
+        // Obtener email del usuario
+        const userRes = await client.query('SELECT email FROM users WHERE id = $1', [userId]);
+        if (userRes.rows.length === 0) {
+            await client.query('ROLLBACK');
+            return res.status(404).json({ error: 'Usuario no encontrado' });
+        }
+        const userEmail = userRes.rows[0].email;
+
         const eggRes = await client.query(
             `SELECT id, egg_number, is_winning, winning_number, claimed_by_user_id
              FROM eggs
@@ -61,9 +69,11 @@ router.post('/', authMiddleware, async (req, res) => {
                 });
             }
 
+            // Registrar escaneo con información completa
             await client.query(
-                'INSERT INTO scans (user_id, egg_id) VALUES ($1, $2)',
-                [userId, egg.id]
+                `INSERT INTO scans (user_id, user_email, egg_id, egg_number, qr_code_data, is_winning, winning_number)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+                [userId, userEmail, egg.id, egg.egg_number, qrData, true, egg.winning_number]
             );
 
             await client.query(
@@ -79,7 +89,9 @@ router.post('/', authMiddleware, async (req, res) => {
                 req.io.emit('new_scan', {
                     resultType: 'winning',
                     userId,
+                    userEmail,
                     eggNumber: egg.winning_number,
+                    eggData: qrData,
                     message: `El huevo N°${egg.winning_number} se ha encontrado`
                 });
             }
@@ -92,12 +104,26 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
+        // Registrar escaneo falso con información completa
         await client.query(
-            'INSERT INTO scans (user_id, egg_id) VALUES ($1, $2)',
-            [userId, egg.id]
+            `INSERT INTO scans (user_id, user_email, egg_id, egg_number, qr_code_data, is_winning, winning_number)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+            [userId, userEmail, egg.id, egg.egg_number, qrData, false, null]
         );
 
         await client.query('COMMIT');
+
+        // Emitir también escaneos falsos para que el admin vea toda la actividad
+        if (req.io) {
+            req.io.emit('new_scan', {
+                resultType: 'fake',
+                userId,
+                userEmail,
+                eggNumber: egg.egg_number,
+                eggData: qrData,
+                message: `Escaneo fallido del huevo N°${egg.egg_number}`
+            });
+        }
 
         return res.json({
             success: true,

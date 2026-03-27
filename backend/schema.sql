@@ -1,3 +1,11 @@
+-- Tabla de administradores
+CREATE TABLE IF NOT EXISTS admins (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Tabla de usuarios
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -22,11 +30,16 @@ ALTER TABLE eggs ADD COLUMN IF NOT EXISTS winning_number INT;
 ALTER TABLE eggs ADD COLUMN IF NOT EXISTS claimed_by_user_id INT REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE eggs ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMP;
 
--- Tabla de escaneos
+-- Tabla de escaneos (mejorada con información del usuario)
 CREATE TABLE IF NOT EXISTS scans (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    user_email VARCHAR(255) NOT NULL,
     egg_id INT NOT NULL REFERENCES eggs(id) ON DELETE CASCADE,
+    egg_number INT NOT NULL,
+    qr_code_data VARCHAR(50) NOT NULL,
+    is_winning BOOLEAN NOT NULL,
+    winning_number INT,
     scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, egg_id)
 );

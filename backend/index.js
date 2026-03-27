@@ -6,6 +6,7 @@ const pool = require('./db');
 const authRoutes = require('./routes/auth');
 const scanRoutes = require('./routes/scan');
 const userRoutes = require('./routes/user');
+const adminRoutes = require('./routes/admin');
 const socketSetup = require('./socket');
 
 dotenv.config();
@@ -61,6 +62,7 @@ app.get('/api/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/scan', scanRoutes);
 app.use('/api/user', userRoutes);
+app.use('/api/admin', adminRoutes);
 
 const PORT = process.env.PORT || 3001;
 
