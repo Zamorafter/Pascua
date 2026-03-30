@@ -15,12 +15,40 @@ const app = express();
 const server = http.createServer(app);
 const io = socketSetup.init(server);
 
+async function ensureRuntimeSchema() {
+    const statements = [
+        `CREATE TABLE IF NOT EXISTS admins (
+            id SERIAL PRIMARY KEY,
+            email VARCHAR(255) NOT NULL UNIQUE,
+            password_hash VARCHAR(255) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`,
+        `CREATE TABLE IF NOT EXISTS scans (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+            egg_id INT NOT NULL REFERENCES eggs(id) ON DELETE CASCADE,
+            scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(user_id, egg_id)
+        )`,
+        'ALTER TABLE scans ADD COLUMN IF NOT EXISTS user_email VARCHAR(255)',
+        'ALTER TABLE scans ADD COLUMN IF NOT EXISTS egg_number INT',
+        'ALTER TABLE scans ADD COLUMN IF NOT EXISTS qr_code_data VARCHAR(50)',
+        'ALTER TABLE scans ADD COLUMN IF NOT EXISTS is_winning BOOLEAN NOT NULL DEFAULT FALSE',
+        'ALTER TABLE scans ADD COLUMN IF NOT EXISTS winning_number INT'
+    ];
+
+    for (const statement of statements) {
+        await pool.query(statement);
+    }
+}
+
 async function verifyStartup() {
     console.log(`Iniciando backend. PORT=${process.env.PORT || 3001}`);
     console.log(`DATABASE_URL configurada: ${Boolean(process.env.DATABASE_URL)}`);
 
     try {
         await pool.query('SELECT 1');
+        await ensureRuntimeSchema();
         console.log('Conexion a PostgreSQL verificada correctamente');
     } catch (error) {
         console.error('Error verificando la conexion a PostgreSQL:', error);
