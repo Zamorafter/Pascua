@@ -1,11 +1,12 @@
 # Proyecto Huevos Pascua
 
-Aplicacion web para una busqueda de huevos de pascua con registro de usuarios, escaneo QR, progreso por jugador y notificaciones en tiempo real.
+Aplicacion web para una busqueda de huevos de pascua con registro de usuarios, escaneo QR, progreso por jugador, notificaciones en tiempo real y panel de administrador.
 
 ## Estructura
 
 - `backend/`: API con Express, PostgreSQL, JWT y Socket.IO.
 - `frontend/`: sitio estatico listo para publicar en Netlify.
+- `frontend/admin.html`: panel administrador para ver quien escaneo y cual huevo escaneo.
 - `backend/schema.sql`: crea las tablas del juego y carga 80 QR (20 premios reales y 60 falsos) sin borrar progreso.
 
 ## Backend local
@@ -20,6 +21,7 @@ npm.cmd install
 
 3. Configura [backend/.env](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/.env) con tus valores reales.
    Puedes copiar [backend/.env.example](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/backend/.env.example) como base.
+   Agrega tambien `ADMIN_EMAIL` y `ADMIN_PASSWORD`.
 4. Crea la base de datos `easter_egg` en PostgreSQL y ejecuta la migracion:
 
 ```powershell
@@ -60,6 +62,8 @@ Durante desarrollo local, [frontend/config.js](C:/Users/rquevedo/Music/huevo%20d
    - `DATABASE_URL=${{ Postgres.DATABASE_URL }}`
    - `JWT_SECRET`
    - `PORT`
+   - `ADMIN_EMAIL`
+   - `ADMIN_PASSWORD`
 4. Ejecuta la migracion del backend:
 
 ```bash
@@ -82,6 +86,7 @@ npm run migrate
 4. Lanza el deploy.
 5. Netlify generara automaticamente [frontend/config.js](C:/Users/rquevedo/Music/huevo%20de%20pascua/proyecto-huevos-pascua/frontend/config.js) con la URL correcta del backend.
 6. El backend ya acepta dominios `*.netlify.app` desde CORS.
+7. El panel admin quedara disponible en `/admin.html`.
 
 ## Flujo final recomendado
 

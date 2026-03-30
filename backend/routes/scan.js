@@ -4,6 +4,20 @@ const authMiddleware = require('../middleware/auth');
 
 const router = express.Router();
 
+function createAdminEvent({ userEmail, eggNumber, qrData, isWinning, winningNumber }) {
+    return {
+        scannerEmail: userEmail,
+        eggNumber,
+        qrData,
+        resultType: isWinning ? 'winning' : 'fake',
+        winningNumber: isWinning ? winningNumber : null,
+        scannedAt: new Date().toISOString(),
+        message: isWinning
+            ? `${userEmail} encontro el huevo premio N°${winningNumber}`
+            : `${userEmail} escaneo el huevo N°${eggNumber} sin premio`
+    };
+}
+
 router.post('/', authMiddleware, async (req, res) => {
     const { qrData } = req.body;
     const userId = req.userId;
@@ -17,12 +31,16 @@ router.post('/', authMiddleware, async (req, res) => {
     try {
         await client.query('BEGIN');
 
-        // Obtener email del usuario
-        const userRes = await client.query('SELECT email FROM users WHERE id = $1', [userId]);
+        const userRes = await client.query(
+            'SELECT email FROM users WHERE id = $1',
+            [userId]
+        );
+
         if (userRes.rows.length === 0) {
             await client.query('ROLLBACK');
             return res.status(404).json({ error: 'Usuario no encontrado' });
         }
+
         const userEmail = userRes.rows[0].email;
 
         const eggRes = await client.query(
@@ -69,7 +87,6 @@ router.post('/', authMiddleware, async (req, res) => {
                 });
             }
 
-            // Registrar escaneo con información completa
             await client.query(
                 `INSERT INTO scans (user_id, user_email, egg_id, egg_number, qr_code_data, is_winning, winning_number)
                  VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -88,12 +105,17 @@ router.post('/', authMiddleware, async (req, res) => {
             if (req.io) {
                 req.io.emit('new_scan', {
                     resultType: 'winning',
-                    userId,
-                    userEmail,
                     eggNumber: egg.winning_number,
-                    eggData: qrData,
                     message: `El huevo N°${egg.winning_number} se ha encontrado`
                 });
+
+                req.io.to('admins').emit('admin_scan', createAdminEvent({
+                    userEmail,
+                    eggNumber: egg.egg_number,
+                    qrData,
+                    isWinning: true,
+                    winningNumber: egg.winning_number
+                }));
             }
 
             return res.json({
@@ -104,7 +126,6 @@ router.post('/', authMiddleware, async (req, res) => {
             });
         }
 
-        // Registrar escaneo falso con información completa
         await client.query(
             `INSERT INTO scans (user_id, user_email, egg_id, egg_number, qr_code_data, is_winning, winning_number)
              VALUES ($1, $2, $3, $4, $5, $6, $7)`,
@@ -113,16 +134,14 @@ router.post('/', authMiddleware, async (req, res) => {
 
         await client.query('COMMIT');
 
-        // Emitir también escaneos falsos para que el admin vea toda la actividad
         if (req.io) {
-            req.io.emit('new_scan', {
-                resultType: 'fake',
-                userId,
+            req.io.to('admins').emit('admin_scan', createAdminEvent({
                 userEmail,
                 eggNumber: egg.egg_number,
-                eggData: qrData,
-                message: `Escaneo fallido del huevo N°${egg.egg_number}`
-            });
+                qrData,
+                isWinning: false,
+                winningNumber: null
+            }));
         }
 
         return res.json({

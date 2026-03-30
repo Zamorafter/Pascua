@@ -1,4 +1,4 @@
-const API_BASE_URL = 'https://pascua-production.up.railway.app';
+const API_BASE_URL = window.APP_CONFIG?.API_BASE_URL || 'http://localhost:3001';
 
 let token = null;
 let userId = null;
@@ -290,7 +290,7 @@ function connectWebSocket() {
 
     socket.on('connect', () => {
         console.log('Conectado al WebSocket');
-        socket.emit('authenticate', userId);
+        socket.emit('authenticate', { token });
     });
 
     socket.on('new_scan', (data) => {

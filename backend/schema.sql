@@ -30,7 +30,7 @@ ALTER TABLE eggs ADD COLUMN IF NOT EXISTS winning_number INT;
 ALTER TABLE eggs ADD COLUMN IF NOT EXISTS claimed_by_user_id INT REFERENCES users(id) ON DELETE SET NULL;
 ALTER TABLE eggs ADD COLUMN IF NOT EXISTS claimed_at TIMESTAMP;
 
--- Tabla de escaneos (mejorada con información del usuario)
+-- Tabla de escaneos con informacion util para admin
 CREATE TABLE IF NOT EXISTS scans (
     id SERIAL PRIMARY KEY,
     user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -43,6 +43,12 @@ CREATE TABLE IF NOT EXISTS scans (
     scanned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     UNIQUE(user_id, egg_id)
 );
+
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS user_email VARCHAR(255);
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS egg_number INT;
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS qr_code_data VARCHAR(50);
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS is_winning BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE scans ADD COLUMN IF NOT EXISTS winning_number INT;
 
 -- Cargar 80 QR sin borrar progreso.
 -- 20 premios reales y 60 QR sin premio.
